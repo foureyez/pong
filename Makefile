@@ -1,15 +1,8 @@
 build:
-	odin build examples -collection:deps=deps -collection:engine=engine
-
-check:
-	odin strip-semicolon . -collection:deps=deps -collection:engine=engine
-	odin check examples -collection:deps=deps -collection:engine=engine
-
-doc:
-	odin doc examples -collection:deps=deps -collection:engine=engine
+	odin build . -collection:deps=deps -collection:engine=engine
 
 run:
-	odin run examples -debug -collection:deps=deps -collection:engine=engine
+	odin run . -debug -collection:deps=deps -collection:engine=engine
 
 shaders:
 	./compile_shaders.sh

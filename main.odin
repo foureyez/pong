@@ -1,10 +1,10 @@
 package example
 
-import "../engine"
 import "core:log"
 import glm "core:math/linalg/glsl"
 import "core:mem"
 import "core:time"
+import "engine"
 import "engine:input"
 import "engine:renderer"
 import "engine:window"
