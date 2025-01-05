@@ -14,6 +14,14 @@ ENABLE_VALIDATION_LAYERS :: true
 validationLayers := []cstring{"VK_LAYER_KHRONOS_validation"}
 deviceExtensions := []cstring{vk.KHR_SWAPCHAIN_EXTENSION_NAME, vk.KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME}
 
+when ODIN_OS == .Darwin {
+	// NOTE: just a bogus import of the system library,
+	// needed so we can add a linker flag to point to /usr/local/lib (where vulkan is installed by default)
+	// when trying to load vulkan.
+	@(require, extra_linker_flags = "-rpath /usr/local/lib")
+	foreign import __ "system:System.framework"
+}
+
 Device :: struct {
 	handle:            vk.Device,
 	physical_handle:   vk.PhysicalDevice,
@@ -45,6 +53,57 @@ create_device :: proc() -> Device {
 		graphics_queue = graphics_queue,
 		command_pool = command_pool,
 	}
+}
+
+create_instance :: proc(app_name: string) -> vk.Instance {
+	assert(vk.CreateInstance != nil, "Vulkan function pointer not loaded")
+
+	instance: vk.Instance
+	extensions := get_required_extensions()
+
+	create_info: vk.InstanceCreateInfo = {
+		sType            = .INSTANCE_CREATE_INFO,
+		pApplicationInfo = &vk.ApplicationInfo {
+			sType = .APPLICATION_INFO,
+			pApplicationName = strings.clone_to_cstring(app_name),
+			applicationVersion = vk.MAKE_VERSION(0, 0, 1),
+			pEngineName = "No Engine",
+			engineVersion = vk.MAKE_VERSION(0, 0, 1),
+			apiVersion = vk.API_VERSION_1_3,
+		},
+	}
+
+	when ODIN_OS == .Darwin {
+		create_info.flags |= {.ENUMERATE_PORTABILITY_KHR}
+		append(&extensions, vk.KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)
+	}
+
+	cextensions := convert_to_cstring(extensions[:])
+	create_info.enabledExtensionCount = cast(u32)len(cextensions)
+	create_info.ppEnabledExtensionNames = raw_data(cextensions)
+
+	if ENABLE_VALIDATION_LAYERS {
+		assert(check_validation_layer_support(), "Validation layer not supported")
+
+		debug_create_info: vk.DebugUtilsMessengerCreateInfoEXT = {}
+		create_info.enabledLayerCount = cast(u32)len(validationLayers)
+		create_info.ppEnabledLayerNames = raw_data(validationLayers)
+		populate_debug_messenger_create_info(&debug_create_info)
+		create_info.pNext = &debug_create_info
+	} else {
+		create_info.enabledLayerCount = 0
+		create_info.pNext = nil
+	}
+
+	if vk.CreateInstance(&create_info, nil, &instance) != .SUCCESS {
+		panic("Unable to create vk instance")
+	}
+
+	if ext, ok := has_window_required_instance_extensions(); !ok {
+		panic(fmt.tprintf("Required glfw extension not found: %v", ext))
+	}
+	vk.load_proc_addresses_instance(instance)
+	return instance
 }
 
 destroy_device :: proc() {
@@ -330,60 +389,6 @@ vk_messenger_callback :: proc "system" (
 	return false
 }
 
-/**
-* Creates vk.Instance object
-**/
-@(private)
-create_instance :: proc() -> vk.Instance {
-	assert(vk.CreateInstance != nil, "Vulkan function pointer not loaded")
-
-	instance: vk.Instance
-	extensions := get_required_extensions()
-
-	create_info: vk.InstanceCreateInfo = {
-		sType            = .INSTANCE_CREATE_INFO,
-		pApplicationInfo = &vk.ApplicationInfo {
-			sType = .APPLICATION_INFO,
-			pApplicationName = "Hello Vulkan",
-			applicationVersion = vk.MAKE_VERSION(0, 0, 1),
-			pEngineName = "No Engine",
-			engineVersion = vk.MAKE_VERSION(0, 0, 1),
-			apiVersion = vk.API_VERSION_1_3,
-		},
-	}
-
-	when ODIN_OS == .Darwin {
-		create_info.flags |= {.ENUMERATE_PORTABILITY_KHR}
-		append(&extensions, vk.KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)
-	}
-
-	cextensions := convert_to_cstring(extensions[:])
-	create_info.enabledExtensionCount = cast(u32)len(cextensions)
-	create_info.ppEnabledExtensionNames = raw_data(cextensions)
-
-	if ENABLE_VALIDATION_LAYERS {
-		assert(check_validation_layer_support(), "Validation layer not supported")
-
-		debug_create_info: vk.DebugUtilsMessengerCreateInfoEXT = {}
-		create_info.enabledLayerCount = cast(u32)len(validationLayers)
-		create_info.ppEnabledLayerNames = raw_data(validationLayers)
-		populate_debug_messenger_create_info(&debug_create_info)
-		create_info.pNext = &debug_create_info
-	} else {
-		create_info.enabledLayerCount = 0
-		create_info.pNext = nil
-	}
-
-	if vk.CreateInstance(&create_info, nil, &instance) != .SUCCESS {
-		panic("Unable to create vk instance")
-	}
-
-	if ext, ok := has_window_required_instance_extensions(); !ok {
-		panic(fmt.tprintf("Required glfw extension not found: %v", ext))
-	}
-	vk.load_proc_addresses_instance(instance)
-	return instance
-}
 
 @(private)
 check_validation_layer_support :: proc() -> bool {

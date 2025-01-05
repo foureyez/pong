@@ -200,3 +200,19 @@ vk_create_renderpass :: proc(format: vk.Format, final_layout: vk.ImageLayout) ->
 
 	return render_pass
 }
+
+vk_create_command_buffers :: proc(count: u32) -> []vk.CommandBuffer {
+	command_buffers := make([]vk.CommandBuffer, count)
+	alloc_info := vk.CommandBufferAllocateInfo {
+		sType              = .COMMAND_BUFFER_ALLOCATE_INFO,
+		level              = .PRIMARY,
+		commandPool        = vk_ctx.device.command_pool,
+		commandBufferCount = u32(len(command_buffers)),
+	}
+
+	assert(
+		vk.AllocateCommandBuffers(vk_ctx.device.handle, &alloc_info, raw_data(command_buffers)) == .SUCCESS,
+		"unable to allocate command buffers",
+	)
+	return command_buffers
+}

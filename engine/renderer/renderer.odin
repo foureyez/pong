@@ -21,8 +21,8 @@ DEFAULT_GLOBAL_UBO := GlobalUboData {
 	light_dir       = glm.normalize(glm.vec3{1, -3, -1}),
 }
 
-init :: proc() {
-	vulkan.init(MAX_FRAMES_IN_FLIGHT)
+init :: proc(name: string) {
+	vulkan.init(name, MAX_FRAMES_IN_FLIGHT)
 	vulkan.init_graphics_pipeline(GlobalUboData)
 }
 

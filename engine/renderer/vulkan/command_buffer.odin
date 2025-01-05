@@ -4,26 +4,6 @@ import "core:fmt"
 import "core:log"
 import vk "vendor:vulkan"
 
-create_command_buffers :: proc(count: u32) -> []vk.CommandBuffer {
-	command_buffers := make([]vk.CommandBuffer, count)
-	alloc_info := vk.CommandBufferAllocateInfo {
-		sType              = .COMMAND_BUFFER_ALLOCATE_INFO,
-		level              = .PRIMARY,
-		commandPool        = vk_ctx.device.command_pool,
-		commandBufferCount = u32(len(command_buffers)),
-	}
-
-	assert(
-		vk.AllocateCommandBuffers(vk_ctx.device.handle, &alloc_info, raw_data(command_buffers)) == .SUCCESS,
-		"unable to allocate command buffers",
-	)
-	return command_buffers
-}
-
-get_command_buffer :: proc(index: u32) -> vk.CommandBuffer {
-	return vk_ctx.command_buffers[index]
-}
-
 free_command_buffers :: proc() {
 	vk.FreeCommandBuffers(
 		vk_ctx.device.handle,
@@ -62,7 +42,7 @@ submit_command_buffers :: proc(frame_info: FrameInfo) -> vk.Result {
 		return result
 	}
 
-	preesnt_info := vk.PresentInfoKHR {
+	present_info := vk.PresentInfoKHR {
 		sType              = .PRESENT_INFO_KHR,
 		waitSemaphoreCount = 1,
 		pWaitSemaphores    = raw_data(signal_semaphores),
@@ -71,6 +51,6 @@ submit_command_buffers :: proc(frame_info: FrameInfo) -> vk.Result {
 		pImageIndices      = &vk_ctx.swapchain.image_index,
 	}
 
-	result = vk.QueuePresentKHR(vk_ctx.device.present_queue.vk_queue, &preesnt_info)
+	result = vk.QueuePresentKHR(vk_ctx.device.present_queue.vk_queue, &present_info)
 	return result
 }

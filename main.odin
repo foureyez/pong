@@ -19,7 +19,7 @@ main :: proc() {
 	title := "Starter App"
 
 	window.init(title, width, height, {})
-	renderer.init()
+	renderer.init(title)
 	defer cleanup()
 
 	start_loop()
