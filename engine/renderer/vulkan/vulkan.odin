@@ -9,6 +9,14 @@ import vk "vendor:vulkan"
 DEFAULT_VERT_SHADER :: "shaders/compiled/simple.vert.spv"
 DEFAULT_FRAG_SHADER :: "shaders/compiled/simple.frag.spv"
 
+when ODIN_OS == .Darwin {
+	// NOTE: just a bogus import of the system library,
+	// needed so we can add a linker flag to point to /usr/local/lib (where vulkan is installed by default)
+	// when trying to load vulkan.
+	@(require, extra_linker_flags = "-rpath /usr/local/lib")
+	foreign import __ "system:System.framework"
+}
+
 VulkanContext :: struct {
 	g_ctx:                runtime.Context,
 	debug_m:              vk.DebugUtilsMessengerEXT,
@@ -36,6 +44,7 @@ FrameInfo :: struct {
 	frame_buffer:   vk.Framebuffer,
 }
 
+
 vk_ctx: VulkanContext
 
 init :: proc(max_frames_in_flight: u32) {
@@ -49,7 +58,7 @@ init :: proc(max_frames_in_flight: u32) {
 	vk_ctx.device = create_device()
 	vk_ctx.allocator = create_vma_allocator()
 	vk_ctx.swapchain = create_swapchain()
-	vk_ctx.renderpass = create_renderpass(vk_ctx.swapchain.format.format, .PRESENT_SRC_KHR)
+	vk_ctx.renderpass = vk_create_renderpass(vk_ctx.swapchain.format.format, .PRESENT_SRC_KHR)
 	create_swapchain_frame_buffers()
 
 	vk_ctx.image_available, vk_ctx.render_finished, vk_ctx.inflight_fence = create_sync_objects(max_frames_in_flight)

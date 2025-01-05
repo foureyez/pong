@@ -4,6 +4,14 @@ import "core:log"
 import "core:strings"
 import vk "vendor:vulkan"
 
+convert_to_cstring :: proc(ins: []string) -> (outs: []cstring) {
+	outs = make([]cstring, len(ins))
+	for s, i in ins {
+		outs[i] = strings.clone_to_cstring(s)
+	}
+	return outs
+}
+
 @(private)
 find_memory_type :: proc(filter: u32, properties: vk.MemoryPropertyFlags) -> u32 {
 	mem_properties: vk.PhysicalDeviceMemoryProperties
