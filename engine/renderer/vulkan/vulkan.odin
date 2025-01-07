@@ -4,10 +4,11 @@ import "base:runtime"
 import "core:log"
 import "deps:vma"
 import "engine:window"
+import stbi "vendor:stb/image"
 import vk "vendor:vulkan"
 
-DEFAULT_VERT_SHADER :: "shaders/compiled/simple.vert.spv"
-DEFAULT_FRAG_SHADER :: "shaders/compiled/simple.frag.spv"
+DEFAULT_VERT_SHADER :: "assets/shaders/compiled/simple.vert.spv"
+DEFAULT_FRAG_SHADER :: "assets/shaders/compiled/simple.frag.spv"
 
 VulkanContext :: struct {
 	g_ctx:                runtime.Context,
@@ -19,6 +20,7 @@ VulkanContext :: struct {
 	swapchain:            Swapchain,
 	renderpass:           vk.RenderPass,
 	descriptor_pool:      vk.DescriptorPool,
+	staging_buffer:       Buffer,
 	graphics_pipeline:    GraphicsPipeline,
 	global_ubo:           UniformBufferObject,
 	command_buffers:      []vk.CommandBuffer,
@@ -56,9 +58,41 @@ init :: proc(name: string, max_frames_in_flight: u32) {
 	vk_ctx.command_buffers = vk_create_command_buffers(max_frames_in_flight)
 }
 
-draw_simple :: proc(command_buffer: vk.CommandBuffer) {
-	vk.CmdDraw(command_buffer, 3, 1, 0, 0)
+
+init_graphics_pipeline :: proc(ubo_type: typeid) {
+
+	// Create uniform buffers and descriptor set
+	vk_ctx.descriptor_pool = create_descriptor_pool(vk_ctx.max_frames_in_flight, {}, {.UNIFORM_BUFFER, vk_ctx.max_frames_in_flight})
+	vk_ctx.global_ubo = initialize_global_ubo(ubo_type)
+
+	// Create pipeline layout
+	pipeline_config := default_pipeline_config()
+	pipeline_config.render_pass = vk_ctx.renderpass
+	pipeline_config.pipeline_layout = create_pipeline_layout(vk_ctx.global_ubo.layout.descriptor_set_layout)
+	// pipeline_config.attribute_descriptions = get_attribute_descriptions()
+	// pipeline_config.binding_descriptions = get_bindings_descriptions()
+
+	// Create graphics pipeline 
+	vk_ctx.graphics_pipeline = create_graphics_pipeline(DEFAULT_VERT_SHADER, DEFAULT_FRAG_SHADER, &pipeline_config)
+
+	// Load image
+	{
+		width, height, tex_channels: i32
+		pixels := stbi.load("assets/textures/entity.png", &width, &height, &tex_channels, 4)
+		if pixels == nil {
+			log.panic("unable to load image")
+		}
+
+		image_size: vk.DeviceSize = vk.DeviceSize(width * height * 4)
+		vk_create_image(vk.Extent2D{u32(width), u32(height)}, .R8G8B8A8_UNORM, {.TRANSFER_DST, .SAMPLED})
+	}
+	// Staging buffer
+	{
+		vk_ctx.staging_buffer = create_buffer(1 * MB, {.TRANSFER_SRC}, .CPU_TO_GPU)
+	}
+
 }
+
 
 create_sync_objects :: proc(count: u32) -> (image_available: []vk.Semaphore, render_finished: []vk.Semaphore, inflight_fence: []vk.Fence) {
 	image_available = make([]vk.Semaphore, count)
@@ -70,22 +104,6 @@ create_sync_objects :: proc(count: u32) -> (image_available: []vk.Semaphore, ren
 		inflight_fence[i] = vk_create_fence({.SIGNALED})
 	}
 	return image_available, render_finished, inflight_fence
-}
-
-init_graphics_pipeline :: proc(ubo_type: typeid) {
-	// Create uniform buffers and descriptor set
-	vk_ctx.descriptor_pool = create_descriptor_pool(vk_ctx.max_frames_in_flight, {}, {.UNIFORM_BUFFER, vk_ctx.max_frames_in_flight})
-	vk_ctx.global_ubo = initialize_global_ubo(ubo_type)
-
-	// Create pipeline layout
-	pipeline_config := default_pipeline_config()
-	pipeline_config.pipeline_layout = create_pipeline_layout(vk_ctx.global_ubo.layout.descriptor_set_layout)
-	pipeline_config.render_pass = vk_ctx.renderpass
-	// pipeline_config.attribute_descriptions = get_attribute_descriptions()
-	// pipeline_config.binding_descriptions = get_bindings_descriptions()
-
-	// Create graphics pipeline 
-	vk_ctx.graphics_pipeline = create_graphics_pipeline(DEFAULT_VERT_SHADER, DEFAULT_FRAG_SHADER, &pipeline_config)
 }
 
 create_vma_allocator :: proc() -> (allocator: vma.Allocator) {
@@ -103,6 +121,7 @@ create_vma_allocator :: proc() -> (allocator: vma.Allocator) {
 	}
 	return allocator
 }
+
 
 get_next_frame :: proc() -> (frame_info: FrameInfo) {
 	vk_ctx.frame_index = (vk_ctx.frame_index + 1) % vk_ctx.max_frames_in_flight
@@ -135,6 +154,10 @@ recreate_swap_chain :: proc() {
 		vk_ctx.swapchain = swapchain
 		create_swapchain_frame_buffers()
 	}
+}
+
+draw_simple :: proc(command_buffer: vk.CommandBuffer) {
+	vk.CmdDraw(command_buffer, 6, 1, 0, 0)
 }
 
 cleanup :: proc() {

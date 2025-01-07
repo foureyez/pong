@@ -4,6 +4,9 @@ import "core:log"
 import "core:strings"
 import vk "vendor:vulkan"
 
+KB :: 1024
+MB :: KB * 1024
+
 convert_to_cstring :: proc(ins: []string) -> (outs: []cstring) {
 	outs = make([]cstring, len(ins))
 	for s, i in ins {

@@ -54,3 +54,35 @@ submit_command_buffers :: proc(frame_info: FrameInfo) -> vk.Result {
 	result = vk.QueuePresentKHR(vk_ctx.device.present_queue.vk_queue, &present_info)
 	return result
 }
+
+begin_single_time_commands :: proc(device: Device) -> vk.CommandBuffer {
+	alloc_info: vk.CommandBufferAllocateInfo = {}
+	alloc_info.sType = .COMMAND_BUFFER_ALLOCATE_INFO
+	alloc_info.level = .PRIMARY
+	alloc_info.commandPool = device.command_pool
+	alloc_info.commandBufferCount = 1
+
+	command_buffer: vk.CommandBuffer
+	vk.AllocateCommandBuffers(device.handle, &alloc_info, &command_buffer)
+
+	begin_info: vk.CommandBufferBeginInfo = {}
+	begin_info.sType = .COMMAND_BUFFER_BEGIN_INFO
+	begin_info.flags = {.ONE_TIME_SUBMIT}
+
+	vk.BeginCommandBuffer(command_buffer, &begin_info)
+	return command_buffer
+}
+
+end_single_time_commands :: proc(device: Device, command_buffer: ^vk.CommandBuffer) {
+	vk.EndCommandBuffer(command_buffer^)
+
+	submit_info: vk.SubmitInfo = {}
+	submit_info.sType = .SUBMIT_INFO
+	submit_info.commandBufferCount = 1
+	submit_info.pCommandBuffers = command_buffer
+
+	vk.QueueSubmit(device.graphics_queue.vk_queue, 1, &submit_info, 0)
+	vk.QueueWaitIdle(device.graphics_queue.vk_queue)
+
+	vk.FreeCommandBuffers(device.handle, device.command_pool, 1, command_buffer)
+}

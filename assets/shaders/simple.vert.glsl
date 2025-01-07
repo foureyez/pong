@@ -20,14 +20,27 @@
 
 // const vec3 DIR_TO_LIGHT = normalize(vec3(1.0, -3.0, -1.0));
 // const float AMBIENT = 0.1;
-vec2 positions[3] = vec2[](
-        vec2(0.0, -0.5),
-        vec2(0.5, 0.5),
-        vec2(-0.5, 0.5)
-    );
+layout(location = 0) out vec2 uv;
+
+vec4 vertices[6] = {
+        // Bottom left
+        vec4(-0.5, 0.5, 0.0, 1.0),
+        // Top left
+        vec4(-0.5, -0.5, 0.0, 0.0),
+        // Top right
+        vec4(0.5, -0.5, 1.0, 0.0),
+
+        // Top right
+        vec4(0.5, -0.5, 1.0, 0.0),
+        // Bottom right
+        vec4(0.5, 0.5, 1.0, 1.0),
+        // Bottom left
+        vec4(-0.5, 0.5, 0.0, 1.0),
+    };
 
 void main() {
-    gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);
+    gl_Position = vec4(vertices[gl_VertexIndex].xy, 0.0, 1.0);
+    uv = vertices[gl_VertexIndex].zw;
     // gl_Position = ubo.projectionViewMatrix * vec4(position, 1.0);
     // vec3 normalWorldSpace = normalize(normal);
     // float lightIntensity = max(dot(normalWorldSpace, DIR_TO_LIGHT), 0);

@@ -1,4 +1,4 @@
-package example
+package main
 
 import "core:log"
 import glm "core:math/linalg/glsl"
@@ -13,6 +13,9 @@ import sdl "vendor:sdl2"
 main :: proc() {
 	cl := log.create_console_logger(lowest = .Debug)
 	context.logger = cl
+	tracking_allocator: mem.Tracking_Allocator
+	mem.tracking_allocator_init(&tracking_allocator, context.allocator)
+	context.allocator = mem.tracking_allocator(&tracking_allocator)
 
 	width: u32 = 1280
 	height: u32 = 720
@@ -20,6 +23,7 @@ main :: proc() {
 
 	window.init(title, width, height, {})
 	renderer.init(title)
+
 	defer cleanup()
 
 	start_loop()
@@ -71,4 +75,19 @@ start_loop :: proc() {
 
 cleanup :: proc() {
 	window.destroy()
+	reset_tracking_allocator(cast(^mem.Tracking_Allocator)context.allocator.data)
+}
+
+reset_tracking_allocator :: proc(a: ^mem.Tracking_Allocator) -> bool {
+	err := false
+	if len(a.allocation_map) > 0 {
+		log.warnf("Leaked allocation count: %v", len(a.allocation_map))
+	}
+	for _, v in a.allocation_map {
+		log.warnf("%v: Leaked %v bytes", v.location, v.size)
+		err = true
+	}
+
+	mem.tracking_allocator_clear(a)
+	return err
 }

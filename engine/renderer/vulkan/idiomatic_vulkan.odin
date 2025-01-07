@@ -32,7 +32,7 @@ vk_get_physical_device_surface_present_modes :: proc(device: vk.PhysicalDevice) 
 }
 
 
-vk_create_image :: proc(extent: vk.Extent2D, format: vk.Format) -> (image: vk.Image, mem: vk.DeviceMemory) {
+vk_create_image :: proc(extent: vk.Extent2D, format: vk.Format, usage: vk.ImageUsageFlags) -> (image: vk.Image, mem: vk.DeviceMemory) {
 	create_info := vk.ImageCreateInfo {
 		sType = .IMAGE_CREATE_INFO,
 		format = format,
@@ -43,7 +43,7 @@ vk_create_image :: proc(extent: vk.Extent2D, format: vk.Format) -> (image: vk.Im
 		initialLayout = .UNDEFINED,
 		samples = {._1},
 		tiling = .LINEAR,
-		usage = {.COLOR_ATTACHMENT, .SAMPLED},
+		usage = usage,
 	}
 
 	vk.CreateImage(vk_ctx.device.handle, &create_info, nil, &image)

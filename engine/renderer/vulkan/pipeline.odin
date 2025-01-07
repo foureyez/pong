@@ -7,6 +7,7 @@ import "core:path/filepath"
 import "core:slice"
 import vk "vendor:vulkan"
 
+
 GraphicsPipeline :: struct {
 	vk_pipeline:        vk.Pipeline,
 	layout:             vk.PipelineLayout,
@@ -130,6 +131,14 @@ default_pipeline_config :: proc() -> (config: PipelineConfig) {
 		pScissors     = nil,
 	}
 
+	dynamic_states := [dynamic]vk.DynamicState{.VIEWPORT, .SCISSOR}
+	config.dynamic_state_info = vk.PipelineDynamicStateCreateInfo {
+		sType             = .PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+		pDynamicStates    = raw_data(dynamic_states),
+		dynamicStateCount = 2,
+		flags             = {},
+	}
+
 	config.rasterization_info = vk.PipelineRasterizationStateCreateInfo {
 		sType                   = .PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 		depthClampEnable        = false,
@@ -189,13 +198,6 @@ default_pipeline_config :: proc() -> (config: PipelineConfig) {
 		back                  = {}, // Optional
 	}
 
-	dynamic_states := [dynamic]vk.DynamicState{.VIEWPORT, .SCISSOR}
-	config.dynamic_state_info = vk.PipelineDynamicStateCreateInfo {
-		sType             = .PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-		pDynamicStates    = raw_data(dynamic_states),
-		dynamicStateCount = 2,
-		flags             = {},
-	}
 	return config
 }
 

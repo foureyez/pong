@@ -1,8 +1,8 @@
 build:
-	odin build . -collection:deps=deps -collection:engine=engine
+	odin build . -debug -collection:deps=deps -collection:engine=engine -o:none
 
 run:
-	odin run . -debug -collection:deps=deps -collection:engine=engine
+	odin run . -collection:deps=deps -collection:engine=engine
 
 shaders:
 	./compile_shaders.sh
