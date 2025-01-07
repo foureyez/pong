@@ -1,6 +1,6 @@
-### Chord
+### Pong
 
-Experimental vulkan game engine written in Odin.
+Pong clone using vulkan written in Odin.
 
 ### Running examples
 
