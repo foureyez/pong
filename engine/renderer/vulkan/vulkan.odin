@@ -113,6 +113,7 @@ init_graphics_pipeline :: proc(ubo_type: typeid) {
 	vk.CreateSampler(vk_ctx.device.handle, &sampler_info, nil, &texture_sampler)
 
 
+	// uniform buffers for each frame
 	buffers := make([]Buffer, vk_ctx.max_frames_in_flight)
 	for i in 0 ..< len(buffers) {
 		buffers[i] = create_buffer(size_of(ubo_type), {.UNIFORM_BUFFER}, .CPU_TO_GPU)
@@ -220,7 +221,7 @@ begin_renderpass :: proc(frame_info: ^FrameInfo) {
 	clear_values: [1]vk.ClearValue
 	clear_values[0].color = vk.ClearColorValue {
 		//float32 = frame_info.clear_color,
-		float32 = {1, 1, 1, 1},
+		float32 = {0, 1, 1, 1},
 	}
 
 	render_pass_info := vk.RenderPassBeginInfo {

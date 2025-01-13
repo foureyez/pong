@@ -13,5 +13,9 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
     // outColor = vec4(1.0, 0.0, 0.0, 1.0);
-    outColor = texture(sprite, uv);
+    vec4 color = texture(sprite, uv);
+    if (color.a == 0) {
+        discard;
+    }
+    outColor = color;
 }
