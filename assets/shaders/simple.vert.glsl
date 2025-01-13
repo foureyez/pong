@@ -7,10 +7,10 @@
 //
 // layout(location = 0) out vec3 fragColor;
 //
-// layout(set = 0, binding = 0) uniform GlobalUbo {
-//     mat4 projectionViewMatrix;
-//     vec3 directionToLight;
-// } ubo;
+layout(set = 0, binding = 0) uniform GlobalUbo {
+    mat4 projectionViewMatrix;
+    vec3 directionToLight;
+} ubo;
 
 // layout(push_constant) uniform Push {
 //     // mat4 transform; // projection * view * model matrix

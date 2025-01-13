@@ -7,6 +7,7 @@ import "core:time"
 import "engine:input"
 import "engine:renderer"
 import "engine:window"
+import "game"
 import sdl "vendor:sdl2"
 
 main :: proc() {
@@ -20,24 +21,24 @@ main :: proc() {
 	height: u32 = 720
 	title := "Starter App"
 
+	game_state := game.GameState{}
+	game.init(&game_state)
+
 	window.init(title, width, height, {})
 	renderer.init(title)
 
 	defer cleanup()
 
-	start_loop()
+	start_loop(&game_state)
 }
 
-update :: proc(dt: f64) {
-	// log.info(dt)
-}
 
 render :: proc() {
 	renderer.clear_background({0, 0, 0, 1})
 	renderer.draw_quad({}, {})
 }
 
-start_loop :: proc() {
+start_loop :: proc(game_state: ^game.GameState) {
 	curr_time := time.now()
 	running := true
 	for running {
@@ -62,7 +63,7 @@ start_loop :: proc() {
 			delta_time := time.duration_seconds(time.diff(curr_time, new_time))
 			curr_time = new_time
 
-			update(delta_time)
+			game.update(game_state, delta_time)
 			renderer.render_begin()
 			{
 				render()

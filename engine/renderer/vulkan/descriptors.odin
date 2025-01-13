@@ -65,7 +65,6 @@ DescriptorSetLayout :: struct {
 }
 
 create_descriptor_set_layout :: proc(bindings: ..vk.DescriptorSetLayoutBinding) -> (descriptor_set_layout: DescriptorSetLayout) {
-	//TODO: Check if bindings are valid, i.e. two bindings should not use same bind index
 	for binding in bindings {
 		if _, ok := descriptor_set_layout.bindings[binding.binding]; ok {
 			log.panic("binding already exists")
@@ -101,7 +100,7 @@ DescriptorOption :: struct {
 	set_writes: [dynamic]vk.WriteDescriptorSet,
 }
 
-add_buffer_descriptor :: proc(
+get_add_buffer_descriptor :: proc(
 	binding: u32,
 	set_layout: DescriptorSetLayout,
 	buffer_info: ^vk.DescriptorBufferInfo,

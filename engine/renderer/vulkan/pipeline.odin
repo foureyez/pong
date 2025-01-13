@@ -52,6 +52,7 @@ create_graphics_pipeline :: proc(
 	pipeline.frag_shader_module = create_shader_module(frag_shader)
 	pipeline.layout = pl_config.pipeline_layout
 
+
 	shader_stages := []vk.PipelineShaderStageCreateInfo {
 		{
 			sType = .PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -114,6 +115,16 @@ destroy_pipeline :: proc(pl: GraphicsPipeline) {
 
 bind_pipeline :: proc(command_buffer: vk.CommandBuffer) {
 	vk.CmdBindPipeline(command_buffer, .GRAPHICS, vk_ctx.graphics_pipeline.vk_pipeline)
+	vk.CmdBindDescriptorSets(
+		command_buffer,
+		.GRAPHICS,
+		vk_ctx.graphics_pipeline.layout,
+		0,
+		1,
+		&vk_ctx.global_ubo.descriptor_set[vk_ctx.frame_index],
+		0,
+		nil,
+	)
 }
 
 default_pipeline_config :: proc() -> (config: PipelineConfig) {
