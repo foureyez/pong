@@ -204,18 +204,18 @@ create_vk_buffer :: proc(
 }
 
 copy_buffer :: proc(srcBuffer: vk.Buffer, dstBuffer: vk.Buffer, size: u64) {
-	command_buffer: vk.CommandBuffer = begin_single_time_commands(vk_ctx.device)
+	command_buffer: vk.CommandBuffer = begin_single_time_commands()
 
 	copy_region: vk.BufferCopy = {}
 	copy_region.srcOffset = 0 // Optional
 	copy_region.dstOffset = 0 // Optional
 	copy_region.size = vk.DeviceSize(size)
 	vk.CmdCopyBuffer(command_buffer, srcBuffer, dstBuffer, 1, &copy_region)
-	end_single_time_commands(vk_ctx.device, &command_buffer)
+	end_single_time_commands(&command_buffer)
 }
 
-copy_buffer_to_image :: proc(device: Device, buffer: vk.Buffer, image: vk.Image, width: u32, height: u32, layerCount: u32) {
-	commandBuffer: vk.CommandBuffer = begin_single_time_commands(device)
+copy_buffer_to_image :: proc(buffer: vk.Buffer, image: vk.Image, width: u32, height: u32, layerCount: u32) {
+	commandBuffer: vk.CommandBuffer = begin_single_time_commands()
 
 	region: vk.BufferImageCopy = {}
 	region.bufferOffset = 0
@@ -231,5 +231,5 @@ copy_buffer_to_image :: proc(device: Device, buffer: vk.Buffer, image: vk.Image,
 	region.imageExtent = {width, height, 1}
 
 	vk.CmdCopyBufferToImage(commandBuffer, buffer, image, .TRANSFER_DST_OPTIMAL, 1, &region)
-	end_single_time_commands(device, &commandBuffer)
+	end_single_time_commands(&commandBuffer)
 }

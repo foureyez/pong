@@ -76,21 +76,22 @@ init_graphics_pipeline :: proc(ubo_type: typeid) {
 	vk_ctx.graphics_pipeline = create_graphics_pipeline(DEFAULT_VERT_SHADER, DEFAULT_FRAG_SHADER, &pipeline_config)
 
 	// Load image
-	{
-		width, height, tex_channels: i32
-		pixels := stbi.load("assets/textures/entity.png", &width, &height, &tex_channels, 4)
-		if pixels == nil {
-			log.panic("unable to load image")
-		}
-
-		image_size: vk.DeviceSize = vk.DeviceSize(width * height * 4)
-		vk_create_image(vk.Extent2D{u32(width), u32(height)}, .R8G8B8A8_UNORM, {.TRANSFER_DST, .SAMPLED})
+	width, height, tex_channels: i32
+	pixels := stbi.load("assets/textures/entity.png", &width, &height, &tex_channels, 4)
+	if pixels == nil {
+		log.panic("unable to load image")
 	}
+
 	// Staging buffer
-	{
-		vk_ctx.staging_buffer = create_buffer(1 * MB, {.TRANSFER_SRC}, .CPU_TO_GPU)
-	}
+	vk_ctx.staging_buffer = create_buffer(1 * MB, {.TRANSFER_SRC}, .CPU_TO_GPU)
+	write_to_buffer(vk_ctx.staging_buffer, pixels, 0, 0)
+	stbi.image_free(pixels)
 
+	image_size: vk.DeviceSize = vk.DeviceSize(width * height * 4)
+	texture_image := vk_create_image(vk.Extent2D{u32(width), u32(height)}, .R8G8B8A8_UNORM, {.TRANSFER_DST, .SAMPLED})
+	transition_image_layout(texture_image, .R8G8B8A8_SRGB, .UNDEFINED, .TRANSFER_DST_OPTIMAL)
+	copy_buffer_to_image(vk_ctx.staging_buffer.vk_buffer, texture_image.handle, u32(width), u32(height), 1)
+	transition_image_layout(texture_image, .R8G8B8A8_SRGB, .TRANSFER_DST_OPTIMAL, .SHADER_READ_ONLY_OPTIMAL)
 }
 
 
@@ -158,6 +159,40 @@ recreate_swap_chain :: proc() {
 
 draw_simple :: proc(command_buffer: vk.CommandBuffer) {
 	vk.CmdDraw(command_buffer, 6, 1, 0, 0)
+}
+
+transition_image_layout :: proc(image: Image, format: vk.Format, old_layout, new_layout: vk.ImageLayout) {
+	command_buffer := begin_single_time_commands()
+	barrier := vk.ImageMemoryBarrier {
+		sType = .IMAGE_MEMORY_BARRIER,
+		oldLayout = old_layout,
+		newLayout = new_layout,
+		srcQueueFamilyIndex = vk.QUEUE_FAMILY_IGNORED,
+		dstQueueFamilyIndex = vk.QUEUE_FAMILY_IGNORED,
+		image = image.handle,
+		subresourceRange = vk.ImageSubresourceRange{baseMipLevel = 0, levelCount = 1, baseArrayLayer = 0, layerCount = 1},
+	}
+
+	source_stage, destination_stage: vk.PipelineStageFlags
+
+	switch {
+	case old_layout == .UNDEFINED && new_layout == .TRANSFER_DST_OPTIMAL:
+		barrier.srcAccessMask = {}
+		barrier.dstAccessMask = {.TRANSFER_WRITE}
+
+		source_stage = {.TOP_OF_PIPE}
+		destination_stage = {.TRANSFER}
+	case old_layout == .TRANSFER_DST_OPTIMAL && new_layout == .SHADER_READ_ONLY_OPTIMAL:
+		barrier.srcAccessMask = {.TRANSFER_WRITE}
+		barrier.dstAccessMask = {.SHADER_READ}
+
+		source_stage = {.TRANSFER}
+		destination_stage = {.FRAGMENT_SHADER}
+	case:
+		log.panicf("unsupported layout transition: %v, %v", old_layout, new_layout)
+	}
+	vk.CmdPipelineBarrier(command_buffer, source_stage, destination_stage, {}, 0, nil, 0, nil, 1, &barrier)
+	end_single_time_commands(&command_buffer)
 }
 
 cleanup :: proc() {

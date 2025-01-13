@@ -55,15 +55,15 @@ submit_command_buffers :: proc(frame_info: FrameInfo) -> vk.Result {
 	return result
 }
 
-begin_single_time_commands :: proc(device: Device) -> vk.CommandBuffer {
+begin_single_time_commands :: proc() -> vk.CommandBuffer {
 	alloc_info: vk.CommandBufferAllocateInfo = {}
 	alloc_info.sType = .COMMAND_BUFFER_ALLOCATE_INFO
 	alloc_info.level = .PRIMARY
-	alloc_info.commandPool = device.command_pool
+	alloc_info.commandPool = vk_ctx.device.command_pool
 	alloc_info.commandBufferCount = 1
 
 	command_buffer: vk.CommandBuffer
-	vk.AllocateCommandBuffers(device.handle, &alloc_info, &command_buffer)
+	vk.AllocateCommandBuffers(vk_ctx.device.handle, &alloc_info, &command_buffer)
 
 	begin_info: vk.CommandBufferBeginInfo = {}
 	begin_info.sType = .COMMAND_BUFFER_BEGIN_INFO
@@ -73,7 +73,7 @@ begin_single_time_commands :: proc(device: Device) -> vk.CommandBuffer {
 	return command_buffer
 }
 
-end_single_time_commands :: proc(device: Device, command_buffer: ^vk.CommandBuffer) {
+end_single_time_commands :: proc(command_buffer: ^vk.CommandBuffer) {
 	vk.EndCommandBuffer(command_buffer^)
 
 	submit_info: vk.SubmitInfo = {}
@@ -81,8 +81,8 @@ end_single_time_commands :: proc(device: Device, command_buffer: ^vk.CommandBuff
 	submit_info.commandBufferCount = 1
 	submit_info.pCommandBuffers = command_buffer
 
-	vk.QueueSubmit(device.graphics_queue.vk_queue, 1, &submit_info, 0)
-	vk.QueueWaitIdle(device.graphics_queue.vk_queue)
+	vk.QueueSubmit(vk_ctx.device.graphics_queue.vk_queue, 1, &submit_info, 0)
+	vk.QueueWaitIdle(vk_ctx.device.graphics_queue.vk_queue)
 
-	vk.FreeCommandBuffers(device.handle, device.command_pool, 1, command_buffer)
+	vk.FreeCommandBuffers(vk_ctx.device.handle, vk_ctx.device.command_pool, 1, command_buffer)
 }

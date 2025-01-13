@@ -32,7 +32,7 @@ vk_get_physical_device_surface_present_modes :: proc(device: vk.PhysicalDevice) 
 }
 
 
-vk_create_image :: proc(extent: vk.Extent2D, format: vk.Format, usage: vk.ImageUsageFlags) -> (image: vk.Image, mem: vk.DeviceMemory) {
+vk_create_image :: proc(extent: vk.Extent2D, format: vk.Format, usage: vk.ImageUsageFlags) -> (image: Image) {
 	create_info := vk.ImageCreateInfo {
 		sType = .IMAGE_CREATE_INFO,
 		format = format,
@@ -42,14 +42,14 @@ vk_create_image :: proc(extent: vk.Extent2D, format: vk.Format, usage: vk.ImageU
 		arrayLayers = 1,
 		initialLayout = .UNDEFINED,
 		samples = {._1},
-		tiling = .LINEAR,
+		tiling = .OPTIMAL,
 		usage = usage,
 	}
 
-	vk.CreateImage(vk_ctx.device.handle, &create_info, nil, &image)
+	vk.CreateImage(vk_ctx.device.handle, &create_info, nil, &image.handle)
 
 	mem_requirements: vk.MemoryRequirements
-	vk.GetImageMemoryRequirements(vk_ctx.device.handle, image, &mem_requirements)
+	vk.GetImageMemoryRequirements(vk_ctx.device.handle, image.handle, &mem_requirements)
 
 	mem_alloc_info := vk.MemoryAllocateInfo {
 		sType           = .MEMORY_ALLOCATE_INFO,
@@ -57,10 +57,10 @@ vk_create_image :: proc(extent: vk.Extent2D, format: vk.Format, usage: vk.ImageU
 		memoryTypeIndex = find_memory_type(mem_requirements.memoryTypeBits, {.HOST_VISIBLE, .HOST_COHERENT}),
 	}
 
-	vk.AllocateMemory(vk_ctx.device.handle, &mem_alloc_info, nil, &mem)
-	vk.BindImageMemory(vk_ctx.device.handle, image, mem, 0)
+	vk.AllocateMemory(vk_ctx.device.handle, &mem_alloc_info, nil, &image.memory)
+	vk.BindImageMemory(vk_ctx.device.handle, image.handle, image.memory, 0)
 
-	return image, mem
+	return image
 }
 
 

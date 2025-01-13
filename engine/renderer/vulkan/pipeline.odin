@@ -208,7 +208,6 @@ create_pipeline_layout :: proc(ds_layout: vk.DescriptorSetLayout) -> (layout: vk
 	// 	size       = push_constant_size,
 	// }
 	descriptor_set_layouts := []vk.DescriptorSetLayout{ds_layout}
-	pipeline_layout := vk.PipelineLayout{}
 	pipeline_layout_info := vk.PipelineLayoutCreateInfo {
 		sType          = .PIPELINE_LAYOUT_CREATE_INFO,
 		setLayoutCount = u32(len(descriptor_set_layouts)),
