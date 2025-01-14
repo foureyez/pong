@@ -1,6 +1,7 @@
 package game
 
 import "core:log"
+import "core:time"
 import "engine:core"
 import "engine:renderer"
 
@@ -8,29 +9,37 @@ MAX_ENTITY_COUNT :: 10
 
 
 Entity :: struct {
+	mesh:      renderer.Mesh,
 	transform: core.Transform,
 }
 
 GameState :: struct {
-	entity_count: u32,
-	entities:     [MAX_ENTITY_COUNT]Entity,
+	entities: [dynamic]Entity,
 }
 
 init :: proc(game_state: ^GameState) {
-	create_entity(game_state, core.Transform{pos = {100, 100}, size = {100, 100}})
+	create_entity(game_state, core.Transform{position = {100, 100, 0}, scale = {1, 1, 1}})
 }
 
 update :: proc(game_state: ^GameState, dt: f64) {
 }
 
+render :: proc(game_state: ^GameState) {
+	renderer.clear_background({0.6, 0.1, 0.2, 1})
+	for e in game_state.entities {
+		renderer.draw_mesh(e.mesh)
+	}
+}
+
 create_entity :: proc(game_state: ^GameState, transform: core.Transform) -> ^Entity {
-	entity := new(Entity)
-	if game_state.entity_count >= MAX_ENTITY_COUNT {
+	entity := Entity{}
+	if len(game_state.entities) >= MAX_ENTITY_COUNT {
 		log.panic("max entity reached")
 	}
 
-	game_state.entity_count += 1
-	e := &game_state.entities[game_state.entity_count]
-	e.transform = transform
-	return e
+	entity.transform = transform
+	entity.mesh = renderer.mesh_create_quad()
+
+	append(&game_state.entities, entity)
+	return nil
 }

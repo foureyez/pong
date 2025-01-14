@@ -141,10 +141,9 @@ init_graphics_pipeline :: proc(ubo_type: typeid) {
 	// Create pipeline layout
 	pipeline_config := default_pipeline_config()
 	pipeline_config.render_pass = vk_ctx.renderpass
-	log.info(vk_ctx.global_ubo.layout)
 	pipeline_config.pipeline_layout = create_pipeline_layout(vk_ctx.global_ubo.layout.descriptor_set_layout)
-	// pipeline_config.attribute_descriptions = get_attribute_descriptions()
-	// pipeline_config.binding_descriptions = get_bindings_descriptions()
+	pipeline_config.attribute_descriptions = get_attribute_descriptions()
+	pipeline_config.binding_descriptions = get_bindings_descriptions()
 
 	// Create graphics pipeline 
 	vk_ctx.graphics_pipeline = create_graphics_pipeline(DEFAULT_VERT_SHADER, DEFAULT_FRAG_SHADER, &pipeline_config)
@@ -220,8 +219,8 @@ draw_simple :: proc(command_buffer: vk.CommandBuffer) {
 begin_renderpass :: proc(frame_info: ^FrameInfo) {
 	clear_values: [1]vk.ClearValue
 	clear_values[0].color = vk.ClearColorValue {
-		//float32 = frame_info.clear_color,
-		float32 = {0, 1, 1, 1},
+		float32 = frame_info.clear_color,
+		//float32 = {0, 1, 1, 1},
 	}
 
 	render_pass_info := vk.RenderPassBeginInfo {
@@ -290,6 +289,10 @@ transition_image_layout :: proc(image: Image, format: vk.Format, old_layout, new
 	}
 	vk.CmdPipelineBarrier(command_buffer, source_stage, destination_stage, {}, 0, nil, 0, nil, 1, &barrier)
 	end_single_time_commands(&command_buffer)
+}
+
+get_swapchain_extent :: proc() -> vk.Extent2D {
+	return vk_ctx.swapchain.extent
 }
 
 cleanup :: proc() {

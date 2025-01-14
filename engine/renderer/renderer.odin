@@ -31,7 +31,7 @@ init :: proc(name: string) {
 2. Begin renderpass  and bind graphics pipeline
 3. Bind mesh and issue draw calls to command buffer
 **/
-render_begin :: proc() {
+render_begin :: proc(camera: ^Camera2D = nil) {
 	frame_info = vulkan.get_next_frame()
 
 	ubo := DEFAULT_GLOBAL_UBO
@@ -41,6 +41,7 @@ render_begin :: proc() {
 	vulkan.write_to_buffer_index(&ubo)
 	vulkan.begin_command_buffer(frame_info.command_buffer)
 	vulkan.begin_renderpass(&frame_info)
+	vulkan.bind_pipeline(frame_info.command_buffer)
 }
 
 
@@ -60,18 +61,21 @@ render_end :: proc() {
 	}
 }
 
-handle_window_resize :: proc() {
-	vulkan.recreate_swap_chain()
-	// vulkan.create_viewport_resources()
-}
 
 clear_background :: proc(color: [4]f32) {
 	clear_color = color
 }
 
-draw_quad :: proc(size: [2]f32, pos: [2]f32) {
-	vulkan.bind_pipeline(frame_info.command_buffer)
-	vulkan.draw_simple(frame_info.command_buffer)
+draw_mesh :: proc(mesh: Mesh) {
+	vulkan.mesh_bind(mesh.vk_mesh, frame_info.command_buffer)
+	vulkan.mesh_draw(mesh.vk_mesh, frame_info.command_buffer)
+	//vulkan.draw_simple(frame_info.command_buffer)
+}
+
+
+handle_window_resize :: proc() {
+	vulkan.recreate_swap_chain()
+	// vulkan.create_viewport_resources()
 }
 
 destroy :: proc() {

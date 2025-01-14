@@ -21,11 +21,12 @@ main :: proc() {
 	height: u32 = 720
 	title := "Starter App"
 
-	game_state := game.GameState{}
-	game.init(&game_state)
 
 	window.init(title, width, height, {})
 	renderer.init(title)
+
+	game_state := game.GameState{}
+	game.init(&game_state)
 
 	defer cleanup()
 
@@ -33,14 +34,11 @@ main :: proc() {
 }
 
 
-render :: proc() {
-	renderer.clear_background({0, 0, 0, 1})
-	renderer.draw_quad({}, {})
-}
-
 start_loop :: proc(game_state: ^game.GameState) {
 	curr_time := time.now()
 	running := true
+	camera := renderer.new_camera_2D(100, 100, 100, 100, {0, 0, 0})
+
 	for running {
 		e: sdl.Event
 		for sdl.PollEvent(&e) {
@@ -64,9 +62,9 @@ start_loop :: proc(game_state: ^game.GameState) {
 			curr_time = new_time
 
 			game.update(game_state, delta_time)
-			renderer.render_begin()
+			renderer.render_begin(&camera)
 			{
-				render()
+				game.render(game_state)
 			}
 			renderer.render_end()
 		}
