@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:log"
 import glm "core:math/linalg/glsl"
 import "deps:imgui"
+import "engine:core"
 import "engine:renderer/vulkan"
 import vk "vendor:vulkan"
 
@@ -35,7 +36,7 @@ render_begin :: proc(camera: ^Camera2D = nil) {
 	frame_info = vulkan.get_next_frame()
 
 	ubo := DEFAULT_GLOBAL_UBO
-	// ubo.projection_view = ectx.camera.projection_matrix * ectx.camera.view_matrix
+	//ubo.projection_view = ectx.camera.projection_matrix * ectx.camera.view_matrix
 	frame_info.clear_color = clear_color
 
 	vulkan.write_to_buffer_index(&ubo)
@@ -66,8 +67,12 @@ clear_background :: proc(color: [4]f32) {
 	clear_color = color
 }
 
-draw_mesh :: proc(mesh: Mesh) {
+draw_mesh :: proc(mesh: Mesh, transform: core.Transform) {
 	vulkan.mesh_bind(mesh.vk_mesh, frame_info.command_buffer)
+	push := &vulkan.TransformPushConstantData{model_matrix = transform_matrix(transform)}
+
+	log.info(push)
+	vulkan.write_push_constant(push, frame_info.command_buffer)
 	vulkan.mesh_draw(mesh.vk_mesh, frame_info.command_buffer)
 	//vulkan.draw_simple(frame_info.command_buffer)
 }

@@ -14,11 +14,10 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 
 layout(location = 0) out vec3 texuv;
 
-// layout(push_constant) uniform Push {
-//     // mat4 transform; // projection * view * model matrix
-//     mat4 modelMatrix;
-//     mat4 normalMatrix;
-// } push;
+layout(push_constant) uniform Push {
+    // mat4 transform; // projection * view * model matrix
+    mat4 modelMatrix;
+} push;
 
 // const vec3 DIR_TO_LIGHT = normalize(vec3(1.0, -3.0, -1.0));
 // const float AMBIENT = 0.1;
@@ -41,7 +40,7 @@ vec4 vertices[6] = {
 
 void main() {
     // gl_Position = vec4(vertices[gl_VertexIndex].xy, 0.0, 1.0);
-    gl_Position = vec4(position, 1.0);
+    gl_Position = push.modelMatrix * vec4(position, 1.0);
     texuv = uv;
     // gl_Position = ubo.projectionViewMatrix * vec4(position, 1.0);
     // vec3 normalWorldSpace = normalize(normal);

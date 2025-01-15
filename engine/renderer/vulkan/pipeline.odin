@@ -213,18 +213,18 @@ default_pipeline_config :: proc() -> (config: PipelineConfig) {
 }
 
 create_pipeline_layout :: proc(ds_layout: vk.DescriptorSetLayout) -> (layout: vk.PipelineLayout) {
-	// push_constant_range := vk.PushConstantRange {
-	// 	stageFlags = {.VERTEX, .FRAGMENT}, // NOT {.FRAGMENT|.VERTEX} 
-	// 	offset     = 0,
-	// 	size       = push_constant_size,
-	// }
+	push_constant_range := vk.PushConstantRange {
+		stageFlags = {.VERTEX, .FRAGMENT}, // NOT {.FRAGMENT|.VERTEX} 
+		offset     = 0,
+		size       = size_of(TransformPushConstantData),
+	}
 	descriptor_set_layouts := []vk.DescriptorSetLayout{ds_layout}
 	pipeline_layout_info := vk.PipelineLayoutCreateInfo {
-		sType          = .PIPELINE_LAYOUT_CREATE_INFO,
-		setLayoutCount = u32(len(descriptor_set_layouts)),
-		pSetLayouts    = raw_data(descriptor_set_layouts),
-		// pushConstantRangeCount = 1,
-		// pPushConstantRanges    = &push_constant_range,
+		sType                  = .PIPELINE_LAYOUT_CREATE_INFO,
+		setLayoutCount         = u32(len(descriptor_set_layouts)),
+		pSetLayouts            = raw_data(descriptor_set_layouts),
+		pushConstantRangeCount = 1,
+		pPushConstantRanges    = &push_constant_range,
 	}
 
 	assert(

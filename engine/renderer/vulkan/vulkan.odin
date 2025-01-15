@@ -295,6 +295,17 @@ get_swapchain_extent :: proc() -> vk.Extent2D {
 	return vk_ctx.swapchain.extent
 }
 
+write_push_constant :: proc(data: ^TransformPushConstantData, command_buffer: vk.CommandBuffer) {
+	vk.CmdPushConstants(
+		command_buffer,
+		vk_ctx.graphics_pipeline.layout,
+		{.FRAGMENT, .VERTEX}, // NOT {.FRAGMENT|.VERTEX} 
+		0,
+		size_of(type_of(data)),
+		data,
+	)
+}
+
 cleanup :: proc() {
 	vk.DeviceWaitIdle(vk_ctx.device.handle)
 	free_command_buffers()

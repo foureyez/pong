@@ -1,6 +1,7 @@
 package chordvk
 
 import "core:log"
+import glm "core:math/linalg/glsl"
 import "deps:vma"
 import "engine:core"
 import vk "vendor:vulkan"
@@ -17,6 +18,10 @@ Vertex :: struct {
 	color:    core.vec3,
 	normal:   core.vec3,
 	uv:       core.vec3,
+}
+
+TransformPushConstantData :: struct {
+	model_matrix: glm.mat4,
 }
 
 MeshData :: struct {

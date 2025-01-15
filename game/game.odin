@@ -18,7 +18,7 @@ GameState :: struct {
 }
 
 init :: proc(game_state: ^GameState) {
-	create_entity(game_state, core.Transform{position = {100, 100, 0}, scale = {1, 1, 1}})
+	create_entity(game_state, core.Transform{position = {0, 0, 0}, scale = {1, 1, 1}})
 }
 
 update :: proc(game_state: ^GameState, dt: f64) {
@@ -27,7 +27,7 @@ update :: proc(game_state: ^GameState, dt: f64) {
 render :: proc(game_state: ^GameState) {
 	renderer.clear_background({0.6, 0.1, 0.2, 1})
 	for e in game_state.entities {
-		renderer.draw_mesh(e.mesh)
+		renderer.draw_mesh(e.mesh, e.transform)
 	}
 }
 
