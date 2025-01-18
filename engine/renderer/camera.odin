@@ -14,19 +14,25 @@ Camera2D :: struct {
 	view_matrix:       glm.mat4,
 }
 
-new_camera_2d :: proc(top, bottom, near, far: f32, position: core.vec3) -> Camera2D {
+new_camera_2d :: proc(near, far: f32, position: core.vec3) -> Camera2D {
 	camera := Camera2D {
-		top = top,
-		bottom = bottom,
 		near = near,
 		far = far,
 		transform = {position = position},
 	}
 
+	vertical_bound: f32 = 1
 	extent := vulkan.get_swapchain_extent()
 	aspect_ratio := f32(extent.width) / f32(extent.height)
 	camera.view_matrix = camera_view_yxz_matrix(position, {0, 0, 0})
-	camera.projection_matrix = camera_orthographic_projection_matrix(-aspect_ratio, aspect_ratio, top, bottom, near, far)
+	camera.projection_matrix = camera_orthographic_projection_matrix(
+		-aspect_ratio,
+		aspect_ratio,
+		-vertical_bound,
+		vertical_bound,
+		near,
+		far,
+	)
 	// camera.projection_matrix = camera_perspective_projection_matrix(glm.radians_f32(50.0), aspect_ratio, 0, 10)
 	return camera
 }

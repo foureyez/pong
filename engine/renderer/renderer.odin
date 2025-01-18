@@ -23,6 +23,7 @@ GlobalUboData :: struct {
 
 
 init :: proc(name: string) {
+	compile_shaders()
 	vulkan.init(name, MAX_FRAMES_IN_FLIGHT)
 	vulkan.init_graphics_pipeline(size_of(GlobalUboData))
 }

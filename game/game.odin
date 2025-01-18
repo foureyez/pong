@@ -19,8 +19,8 @@ GameState :: struct {
 }
 
 init :: proc(game_state: ^GameState) {
-	game_state.camera = renderer.new_camera_2d(-1, 1, -1, 1, {0, 0, 0})
-	create_entity(game_state, core.Transform{position = {0, 0, 0}, scale = {0.3, 0.3, 0.3}})
+	game_state.camera = renderer.new_camera_2d(-10, 10, {0, 0, 0})
+	create_entity(game_state, core.Transform{position = {0, 0, -2}, scale = {0.3, 0.3, 0.3}})
 }
 
 update :: proc(game_state: ^GameState, dt: f64) {
