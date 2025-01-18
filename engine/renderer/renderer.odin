@@ -11,6 +11,7 @@ import vk "vendor:vulkan"
 clear_color: [4]f32
 frame_info: vulkan.FrameInfo
 MAX_FRAMES_IN_FLIGHT :: 2
+SHADERS_ROOT_DIR :: "./assets/shaders"
 DEFAULT_GLOBAL_UBO := GlobalUboData {
 	projection_view = 1.0,
 	light_dir       = glm.normalize(glm.vec3{1, -3, -1}),
@@ -23,7 +24,7 @@ GlobalUboData :: struct {
 
 
 init :: proc(name: string) {
-	compile_shaders()
+	compile_shaders(SHADERS_ROOT_DIR)
 	vulkan.init(name, MAX_FRAMES_IN_FLIGHT)
 	vulkan.init_graphics_pipeline(size_of(GlobalUboData))
 }
