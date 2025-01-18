@@ -37,7 +37,6 @@ main :: proc() {
 start_loop :: proc(game_state: ^game.GameState) {
 	curr_time := time.now()
 	running := true
-	camera := renderer.new_camera_2d(-1, 1, -1, 1, {0, 0, 0})
 
 	for running {
 		e: sdl.Event
@@ -63,10 +62,7 @@ start_loop :: proc(game_state: ^game.GameState) {
 		curr_time = new_time
 
 		game.update(game_state, delta_time)
-		renderer.render_begin(&camera)
 		game.render(game_state)
-		log.info("out")
-		renderer.render_end()
 	}
 }
 
