@@ -36,9 +36,11 @@ Image :: struct {
 }
 
 FrameInfo :: struct {
-	clear_color:    [4]f32,
-	command_buffer: vk.CommandBuffer,
-	frame_buffer:   vk.Framebuffer,
+	clear_color:        [4]f32,
+	command_buffer:     vk.CommandBuffer,
+	frame_buffer:       vk.Framebuffer,
+	ubo_buffer:         Buffer,
+	ubo_descriptor_set: vk.DescriptorSet,
 }
 
 UniformBufferObject :: struct {
@@ -68,7 +70,7 @@ init :: proc(name: string, max_frames_in_flight: u32) {
 }
 
 
-init_graphics_pipeline :: proc(ubo_type: typeid) {
+init_graphics_pipeline :: proc(ubo_size: u64) {
 
 	// Create uniform buffers and descriptor set
 	vk_ctx.descriptor_pool = create_descriptor_pool(
@@ -116,8 +118,9 @@ init_graphics_pipeline :: proc(ubo_type: typeid) {
 	// uniform buffers for each frame
 	buffers := make([]Buffer, vk_ctx.max_frames_in_flight)
 	for i in 0 ..< len(buffers) {
-		buffers[i] = create_buffer(size_of(ubo_type), {.UNIFORM_BUFFER}, .CPU_TO_GPU)
+		buffers[i] = create_buffer(ubo_size, {.UNIFORM_BUFFER}, .CPU_TO_GPU)
 	}
+
 
 	ds_layout := create_descriptor_set_layout({0, .UNIFORM_BUFFER, 1, {.VERTEX}, nil}, {1, .COMBINED_IMAGE_SAMPLER, 1, {.FRAGMENT}, nil})
 
@@ -193,6 +196,8 @@ get_next_frame :: proc() -> (frame_info: FrameInfo) {
 
 	frame_info.command_buffer = vk_ctx.command_buffers[vk_ctx.frame_index]
 	frame_info.frame_buffer = get_swapchain_framebuffer()
+	frame_info.ubo_buffer = vk_ctx.global_ubo.buffers[vk_ctx.frame_index]
+	frame_info.ubo_descriptor_set = vk_ctx.global_ubo.descriptor_set[vk_ctx.frame_index]
 	return frame_info
 }
 
@@ -295,13 +300,13 @@ get_swapchain_extent :: proc() -> vk.Extent2D {
 	return vk_ctx.swapchain.extent
 }
 
-write_push_constant :: proc(data: ^TransformPushConstantData, command_buffer: vk.CommandBuffer) {
+write_push_constant_data :: proc(data: ^TransformPushConstantData, command_buffer: vk.CommandBuffer) {
 	vk.CmdPushConstants(
 		command_buffer,
 		vk_ctx.graphics_pipeline.layout,
 		{.FRAGMENT, .VERTEX}, // NOT {.FRAGMENT|.VERTEX} 
 		0,
-		size_of(type_of(data)),
+		size_of(type_of(data^)),
 		data,
 	)
 }

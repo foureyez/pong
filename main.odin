@@ -1,5 +1,6 @@
 package main
 
+import "core:fmt"
 import "core:log"
 import glm "core:math/linalg/glsl"
 import "core:mem"
@@ -21,7 +22,6 @@ main :: proc() {
 	height: u32 = 720
 	title := "Starter App"
 
-
 	window.init(title, width, height, {})
 	renderer.init(title)
 
@@ -37,7 +37,7 @@ main :: proc() {
 start_loop :: proc(game_state: ^game.GameState) {
 	curr_time := time.now()
 	running := true
-	camera := renderer.new_camera_2D(100, 100, 100, 100, {0, 0, 0})
+	camera := renderer.new_camera_2d(-1, 1, -1, 1, {0, 0, 0})
 
 	for running {
 		e: sdl.Event
@@ -56,18 +56,17 @@ start_loop :: proc(game_state: ^game.GameState) {
 					}
 				}
 			}
-
-			new_time := time.now()
-			delta_time := time.duration_seconds(time.diff(curr_time, new_time))
-			curr_time = new_time
-
-			game.update(game_state, delta_time)
-			renderer.render_begin(&camera)
-			{
-				game.render(game_state)
-			}
-			renderer.render_end()
 		}
+
+		new_time := time.now()
+		delta_time := time.duration_seconds(time.diff(curr_time, new_time))
+		curr_time = new_time
+
+		game.update(game_state, delta_time)
+		renderer.render_begin(&camera)
+		game.render(game_state)
+		log.info("out")
+		renderer.render_end()
 	}
 }
 

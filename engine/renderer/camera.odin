@@ -1,5 +1,6 @@
 package renderer
 
+import "core:log"
 import glm "core:math/linalg/glsl"
 import "engine:core"
 import "engine:renderer/vulkan"
@@ -13,7 +14,7 @@ Camera2D :: struct {
 	view_matrix:       glm.mat4,
 }
 
-new_camera_2D :: proc(top, bottom, near, far: f32, position: core.vec3) -> Camera2D {
+new_camera_2d :: proc(top, bottom, near, far: f32, position: core.vec3) -> Camera2D {
 	camera := Camera2D {
 		top = top,
 		bottom = bottom,
@@ -25,7 +26,8 @@ new_camera_2D :: proc(top, bottom, near, far: f32, position: core.vec3) -> Camer
 	extent := vulkan.get_swapchain_extent()
 	aspect_ratio := f32(extent.width) / f32(extent.height)
 	camera.view_matrix = camera_view_yxz_matrix(position, {0, 0, 0})
-	camera.projection_matrix = camera_get_projection_matrix(-aspect_ratio, aspect_ratio, top, bottom, near, far)
+	camera.projection_matrix = camera_orthographic_projection_matrix(-aspect_ratio, aspect_ratio, top, bottom, near, far)
+	// camera.projection_matrix = camera_perspective_projection_matrix(glm.radians_f32(50.0), aspect_ratio, 0, 10)
 	return camera
 }
 
@@ -80,13 +82,31 @@ camera_view_direction_matrix :: proc(position, direction: glm.vec3, up: glm.vec3
 	return view_matrix
 }
 
-camera_get_projection_matrix :: proc(left, right, top, bottom, near, far: f32) -> (projection_matrix: glm.mat4) {
+camera_orthographic_projection_matrix :: proc(left, right, top, bottom, near, far: f32) -> (projection_matrix: glm.mat4) {
+	projection_matrix = 1
 	projection_matrix[0][0] = 2.0 / (right - left)
 	projection_matrix[1][1] = 2.0 / (bottom - top)
 	projection_matrix[2][2] = 1.0 / (far - near)
 	projection_matrix[3][0] = -(right + left) / (right - left)
 	projection_matrix[3][1] = -(bottom + top) / (bottom - top)
 	projection_matrix[3][2] = -near / (far - near)
+	return projection_matrix
+}
+
+camera_perspective_projection_matrix :: proc(fovy, aspect, near, far: f32) -> (projection_matrix: glm.mat4) {
+	// glm.mat4Perspective() glm perspective matrix method
+	// GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted
+	// The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix. 
+	// If you don't do this, then the image will be rendered upside down.
+	// ubo.proj[1][1] *= -1;
+
+	tan_half_fovy := glm.tan(fovy / 2.0)
+	projection_matrix = 1
+	projection_matrix[0][0] = 1.0 / (aspect * tan_half_fovy)
+	projection_matrix[1][1] = 1.0 / (tan_half_fovy)
+	projection_matrix[2][2] = far / (far - near)
+	projection_matrix[2][3] = 1.0
+	projection_matrix[3][2] = -(far * near) / (far - near)
 	return projection_matrix
 }
 

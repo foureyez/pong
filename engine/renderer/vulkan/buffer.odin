@@ -46,6 +46,7 @@ write_to_buffer :: proc(buffer: Buffer, data: rawptr, size: u64 = vk.WHOLE_SIZE,
 	assert(buffer.allocation_info.pMappedData != nil, "Cannot copy to unmapped buffer")
 	if (size == vk.WHOLE_SIZE) {
 		mem.copy(buffer.allocation_info.pMappedData, data, int(buffer.allocation_info.size))
+		log.info(int(buffer.allocation_info.size))
 	} else {
 		// Offset a rawptr: 
 		// https://discord.com/channels/568138951836172421/568871298428698645/1052827800899424257 
@@ -54,8 +55,7 @@ write_to_buffer :: proc(buffer: Buffer, data: rawptr, size: u64 = vk.WHOLE_SIZE,
 	}
 }
 
-write_to_buffer_index :: proc(data: rawptr, size: u64 = vk.WHOLE_SIZE, offset: u64 = 0) {
-	buffer := vk_ctx.global_ubo.buffers[vk_ctx.frame_index]
+write_to_buffer_index :: proc(buffer: Buffer, data: rawptr, size: u64 = vk.WHOLE_SIZE, offset: u64 = 0) {
 	assert(buffer.allocation_info.pMappedData != nil, "Cannot copy to unmapped buffer")
 	if (size == vk.WHOLE_SIZE) {
 		mem.copy(buffer.allocation_info.pMappedData, data, int(buffer.allocation_info.size))

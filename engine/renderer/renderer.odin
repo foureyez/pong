@@ -11,20 +11,20 @@ import vk "vendor:vulkan"
 clear_color: [4]f32
 frame_info: vulkan.FrameInfo
 MAX_FRAMES_IN_FLIGHT :: 2
+DEFAULT_GLOBAL_UBO := GlobalUboData {
+	projection_view = 1.0,
+	light_dir       = glm.normalize(glm.vec3{1, -3, -1}),
+}
 
 GlobalUboData :: struct {
 	projection_view: glm.mat4,
 	light_dir:       glm.vec3,
 }
 
-DEFAULT_GLOBAL_UBO := GlobalUboData {
-	projection_view = 1.0,
-	light_dir       = glm.normalize(glm.vec3{1, -3, -1}),
-}
 
 init :: proc(name: string) {
 	vulkan.init(name, MAX_FRAMES_IN_FLIGHT)
-	vulkan.init_graphics_pipeline(GlobalUboData)
+	vulkan.init_graphics_pipeline(size_of(GlobalUboData))
 }
 
 /**
@@ -34,15 +34,14 @@ init :: proc(name: string) {
 **/
 render_begin :: proc(camera: ^Camera2D = nil) {
 	frame_info = vulkan.get_next_frame()
-
 	ubo := DEFAULT_GLOBAL_UBO
-	//ubo.projection_view = ectx.camera.projection_matrix * ectx.camera.view_matrix
+	ubo.projection_view = camera.projection_matrix
 	frame_info.clear_color = clear_color
 
-	vulkan.write_to_buffer_index(&ubo)
+	vulkan.write_to_buffer(frame_info.ubo_buffer, &ubo)
 	vulkan.begin_command_buffer(frame_info.command_buffer)
 	vulkan.begin_renderpass(&frame_info)
-	vulkan.bind_pipeline(frame_info.command_buffer)
+	vulkan.bind_pipeline(frame_info.command_buffer, &frame_info.ubo_descriptor_set)
 }
 
 
@@ -70,9 +69,7 @@ clear_background :: proc(color: [4]f32) {
 draw_mesh :: proc(mesh: Mesh, transform: core.Transform) {
 	vulkan.mesh_bind(mesh.vk_mesh, frame_info.command_buffer)
 	push := &vulkan.TransformPushConstantData{model_matrix = transform_matrix(transform)}
-
-	log.info(push)
-	vulkan.write_push_constant(push, frame_info.command_buffer)
+	vulkan.write_push_constant_data(push, frame_info.command_buffer)
 	vulkan.mesh_draw(mesh.vk_mesh, frame_info.command_buffer)
 	//vulkan.draw_simple(frame_info.command_buffer)
 }

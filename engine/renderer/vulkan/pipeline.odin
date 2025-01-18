@@ -113,18 +113,9 @@ destroy_pipeline :: proc(pl: GraphicsPipeline) {
 	vk.DestroyPipeline(vk_ctx.device.handle, pl.vk_pipeline, nil)
 }
 
-bind_pipeline :: proc(command_buffer: vk.CommandBuffer) {
+bind_pipeline :: proc(command_buffer: vk.CommandBuffer, descriptor_set: ^vk.DescriptorSet) {
 	vk.CmdBindPipeline(command_buffer, .GRAPHICS, vk_ctx.graphics_pipeline.vk_pipeline)
-	vk.CmdBindDescriptorSets(
-		command_buffer,
-		.GRAPHICS,
-		vk_ctx.graphics_pipeline.layout,
-		0,
-		1,
-		&vk_ctx.global_ubo.descriptor_set[vk_ctx.frame_index],
-		0,
-		nil,
-	)
+	vk.CmdBindDescriptorSets(command_buffer, .GRAPHICS, vk_ctx.graphics_pipeline.layout, 0, 1, descriptor_set, 0, nil)
 }
 
 default_pipeline_config :: proc() -> (config: PipelineConfig) {

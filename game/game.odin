@@ -18,7 +18,7 @@ GameState :: struct {
 }
 
 init :: proc(game_state: ^GameState) {
-	create_entity(game_state, core.Transform{position = {0, 0, 0}, scale = {1, 1, 1}})
+	create_entity(game_state, core.Transform{position = {0, 0, 0}, scale = 1})
 }
 
 update :: proc(game_state: ^GameState, dt: f64) {
