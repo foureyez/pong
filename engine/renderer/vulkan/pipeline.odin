@@ -16,19 +16,21 @@ GraphicsPipeline :: struct {
 }
 
 PipelineConfig :: struct {
-	vertex_input_info:      vk.PipelineVertexInputStateCreateInfo,
-	viewport_info:          vk.PipelineViewportStateCreateInfo,
-	input_assembly_info:    vk.PipelineInputAssemblyStateCreateInfo,
-	rasterization_info:     vk.PipelineRasterizationStateCreateInfo,
-	multisample_info:       vk.PipelineMultisampleStateCreateInfo,
-	color_blend_info:       vk.PipelineColorBlendStateCreateInfo,
-	depth_stencil_info:     vk.PipelineDepthStencilStateCreateInfo,
-	dynamic_state_info:     vk.PipelineDynamicStateCreateInfo,
-	pipeline_layout:        vk.PipelineLayout,
-	render_pass:            vk.RenderPass,
-	subpass:                u32,
-	binding_descriptions:   []vk.VertexInputBindingDescription,
-	attribute_descriptions: []vk.VertexInputAttributeDescription,
+	vertex_input_info:       vk.PipelineVertexInputStateCreateInfo,
+	viewport_info:           vk.PipelineViewportStateCreateInfo,
+	input_assembly_info:     vk.PipelineInputAssemblyStateCreateInfo,
+	rasterization_info:      vk.PipelineRasterizationStateCreateInfo,
+	multisample_info:        vk.PipelineMultisampleStateCreateInfo,
+	color_blend_attachments: [dynamic]vk.PipelineColorBlendAttachmentState,
+	color_blend_info:        vk.PipelineColorBlendStateCreateInfo,
+	depth_stencil_info:      vk.PipelineDepthStencilStateCreateInfo,
+	dynamic_states:          [dynamic]vk.DynamicState,
+	dynamic_state_info:      vk.PipelineDynamicStateCreateInfo,
+	pipeline_layout:         vk.PipelineLayout,
+	render_pass:             vk.RenderPass,
+	subpass:                 u32,
+	binding_descriptions:    []vk.VertexInputBindingDescription,
+	attribute_descriptions:  []vk.VertexInputAttributeDescription,
 }
 
 create_graphics_pipeline :: proc(
@@ -63,7 +65,7 @@ create_graphics_pipeline :: proc(
 			pNext = nil,
 			pSpecializationInfo = nil,
 		},
-		vk.PipelineShaderStageCreateInfo {
+		{
 			sType = .PIPELINE_SHADER_STAGE_CREATE_INFO,
 			stage = {.FRAGMENT},
 			module = pipeline.frag_shader_module,
@@ -133,10 +135,10 @@ default_pipeline_config :: proc() -> (config: PipelineConfig) {
 		pScissors     = nil,
 	}
 
-	dynamic_states := [dynamic]vk.DynamicState{.VIEWPORT, .SCISSOR}
+	append(&config.dynamic_states, vk.DynamicState.VIEWPORT, vk.DynamicState.SCISSOR)
 	config.dynamic_state_info = vk.PipelineDynamicStateCreateInfo {
 		sType             = .PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-		pDynamicStates    = raw_data(dynamic_states),
+		pDynamicStates    = raw_data(config.dynamic_states),
 		dynamicStateCount = 2,
 		flags             = {},
 	}
@@ -165,8 +167,9 @@ default_pipeline_config :: proc() -> (config: PipelineConfig) {
 		alphaToOneEnable      = false,
 	}
 
-	attachments := [dynamic]vk.PipelineColorBlendAttachmentState {
-		{
+	append(
+		&config.color_blend_attachments,
+		vk.PipelineColorBlendAttachmentState {
 			colorWriteMask = {.R, .G, .B, .A},
 			blendEnable = false,
 			srcColorBlendFactor = .ONE,
@@ -176,7 +179,7 @@ default_pipeline_config :: proc() -> (config: PipelineConfig) {
 			dstAlphaBlendFactor = .ZERO,
 			alphaBlendOp = .ADD,
 		},
-	}
+	)
 
 	config.color_blend_info = vk.PipelineColorBlendStateCreateInfo {
 		sType           = .PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
@@ -184,7 +187,7 @@ default_pipeline_config :: proc() -> (config: PipelineConfig) {
 		logicOp         = .COPY,
 		attachmentCount = 1,
 		blendConstants  = {0.0, 0.0, 0.0, 0.0},
-		pAttachments    = raw_data(attachments),
+		pAttachments    = raw_data(config.color_blend_attachments),
 	}
 
 	config.depth_stencil_info = vk.PipelineDepthStencilStateCreateInfo {

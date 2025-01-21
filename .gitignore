@@ -1,6 +1,6 @@
 build
 build/*
-shaders/compiled/*
+assets/shaders/compiled/*
 *.bin
 *.ini
 pong
