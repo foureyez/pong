@@ -54,11 +54,11 @@ window_process_events :: proc() -> bool {
 		#partial switch e.type {
 		case .QUIT:
 			return false
+		case .KEYDOWN:
 		case .WINDOWEVENT:
 			#partial switch e.window.event {
-			// case .SIZE_CHANGED, .RESIZED:
-			// 	renderer.handle_window_resize()
-			// 	continue
+			case .SIZE_CHANGED, .RESIZED:
+				event_publish(.WINDOW_RESIZED, {})
 			case .CLOSE:
 				if e.window.windowID == sdl.GetWindowID(window.handle) {
 					return false
@@ -70,13 +70,18 @@ window_process_events :: proc() -> bool {
 	return true
 }
 
+window_get_extent :: proc() -> [2]u32 {
+	width, height: i32
+	sdl.GetWindowSize(window.handle, &width, &height)
+	return {u32(width), u32(height)}
+}
 
 window_destroy :: proc() {
 	sdl.DestroyWindow(window.handle)
 	free(window)
 }
 
-create_vulkan_surface :: proc(instance: vk.Instance) -> vk.SurfaceKHR {
+window_create_vk_surface :: proc(instance: vk.Instance) -> vk.SurfaceKHR {
 	surface: vk.SurfaceKHR
 	if ok := sdl.Vulkan_CreateSurface(window.handle, instance, &surface); !ok {
 		log.panicf("Unable to create vulkan surface", sdl.GetError())
@@ -84,13 +89,7 @@ create_vulkan_surface :: proc(instance: vk.Instance) -> vk.SurfaceKHR {
 	return surface
 }
 
-window_get_extent :: proc() -> [2]u32 {
-	width, height: i32
-	sdl.GetWindowSize(window.handle, &width, &height)
-	return {u32(width), u32(height)}
-}
-
-get_vulkan_extensions :: proc() -> []string {
+window_get_vk_extensions :: proc() -> []string {
 	ext_count: u32
 	sdl.Vulkan_GetInstanceExtensions(window.handle, &ext_count, nil)
 

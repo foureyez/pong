@@ -14,7 +14,7 @@ init :: proc(cfg: AppConfig) {
 	logger = log.create_console_logger(lowest = cfg.log_level)
 	context.logger = logger
 
-	core.event_initialize()
+	core.event_system_initialize()
 	core.window_initialize(cfg.title, cfg.size.x, cfg.size.y, {})
 	renderer.init(cfg.title)
 }

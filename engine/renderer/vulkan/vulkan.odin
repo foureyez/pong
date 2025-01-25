@@ -57,7 +57,7 @@ init :: proc(name: string, max_frames_in_flight: u32) {
 	}
 	vk_ctx.g_ctx = context
 	vk_ctx.instance = create_instance(name)
-	vk_ctx.surface = core.create_vulkan_surface(vk_ctx.instance)
+	vk_ctx.surface = core.window_create_vk_surface(vk_ctx.instance)
 	vk_ctx.debug_m = create_debug_messenger()
 	vk_ctx.device = create_device()
 	vk_ctx.allocator = create_vma_allocator()

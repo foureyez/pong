@@ -283,7 +283,7 @@ has_window_required_instance_extensions :: proc() -> (string, bool) {
 @(private)
 get_required_extensions :: proc() -> [dynamic]string {
 	extensions := make([dynamic]string)
-	append(&extensions, ..core.get_vulkan_extensions())
+	append(&extensions, ..core.window_get_vk_extensions())
 	if ENABLE_VALIDATION_LAYERS {
 		append(&extensions, vk.EXT_DEBUG_UTILS_EXTENSION_NAME)
 	}

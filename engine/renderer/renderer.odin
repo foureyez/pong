@@ -27,6 +27,7 @@ init :: proc(name: string) {
 	compile_shaders(SHADERS_ROOT_DIR)
 	vulkan.init(name, MAX_FRAMES_IN_FLIGHT)
 	vulkan.init_graphics_pipeline(size_of(GlobalUboData))
+	core.event_register(.WINDOW_RESIZED, nil, handle_window_resize)
 }
 
 /**
@@ -77,9 +78,10 @@ draw_mesh :: proc(mesh: Mesh, transform: core.Transform) {
 }
 
 
-handle_window_resize :: proc() {
+handle_window_resize :: proc(code: core.EventCode, listener: rawptr, event: core.Event) -> bool {
 	vulkan.recreate_swap_chain()
 	// vulkan.create_viewport_resources()
+	return false
 }
 
 destroy :: proc() {
