@@ -2,7 +2,7 @@ package chordvk
 
 import "core:log"
 import "core:slice"
-import "engine:window"
+import "engine:core"
 import sdl "vendor:sdl2"
 import vk "vendor:vulkan"
 
@@ -28,7 +28,7 @@ SwapchainImage :: struct {
 @(private)
 create_swapchain :: proc(old_swapchain: ^Swapchain = nil) -> (swapchain: Swapchain) {
 	pixel_width, pixel_height: i32
-	sdl.Vulkan_GetDrawableSize(window.get_instance().handle, &pixel_width, &pixel_height)
+	sdl.Vulkan_GetDrawableSize(core.window_get_instance().handle, &pixel_width, &pixel_height)
 
 	swapchain.capabilities, swapchain.format, swapchain.present_mode = query_swap_chain_support(vk_ctx.device.physical_handle)
 	swapchain.extent = choose_swap_extent(swapchain.capabilities, pixel_width, pixel_height)

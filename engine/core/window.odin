@@ -1,17 +1,12 @@
-package window
+package core
 
 import "base:runtime"
 import "core:fmt"
 import "core:log"
+import "core:time"
 import "vendor:glfw"
 import sdl "vendor:sdl2"
 import vk "vendor:vulkan"
-
-
-WindowType :: enum {
-	GLFW,
-	SDL,
-}
 
 g_ctx: runtime.Context
 window: ^Window
@@ -24,7 +19,7 @@ Window :: struct {
 	framebuffer_resized: bool,
 }
 
-init :: proc(title: string, width: u32 = 0, height: u32 = 0, flags: sdl.WindowFlags = {}) {
+window_initialize :: proc(title: string, width: u32 = 0, height: u32 = 0, flags: sdl.WindowFlags = {}) {
 	window = new(Window)
 	sdl.Init({.VIDEO, .EVENTS})
 	ctitle := fmt.caprintf(title)
@@ -49,19 +44,34 @@ init :: proc(title: string, width: u32 = 0, height: u32 = 0, flags: sdl.WindowFl
 	vk.load_proc_addresses_global(get_instance_proc_addr)
 }
 
-get_instance :: proc() -> Window {
+window_get_instance :: proc() -> Window {
 	return window^
 }
 
-wait_events :: proc() {
-	//sdl.Wait
+window_process_events :: proc() -> bool {
+	e: sdl.Event
+	for sdl.PollEvent(&e) {
+		#partial switch e.type {
+		case .QUIT:
+			return false
+		case .WINDOWEVENT:
+			#partial switch e.window.event {
+			// case .SIZE_CHANGED, .RESIZED:
+			// 	renderer.handle_window_resize()
+			// 	continue
+			case .CLOSE:
+				if e.window.windowID == sdl.GetWindowID(window.handle) {
+					return false
+				}
+			}
+		}
+	}
+
+	return true
 }
 
-get_id :: proc() -> u32 {
-	return sdl.GetWindowID(window.handle)
-}
 
-destroy :: proc() {
+window_destroy :: proc() {
 	sdl.DestroyWindow(window.handle)
 	free(window)
 }
@@ -74,7 +84,7 @@ create_vulkan_surface :: proc(instance: vk.Instance) -> vk.SurfaceKHR {
 	return surface
 }
 
-get_window_extent :: proc() -> [2]u32 {
+window_get_extent :: proc() -> [2]u32 {
 	width, height: i32
 	sdl.GetWindowSize(window.handle, &width, &height)
 	return {u32(width), u32(height)}
@@ -93,16 +103,4 @@ get_vulkan_extensions :: proc() -> []string {
 	}
 	delete(ext_names)
 	return extensions
-}
-
-get_aspect_ratio :: proc() -> f32 {
-	return f32(window.width) / f32(window.height)
-}
-
-is_framebuffer_resized :: proc() -> bool {
-	return window.framebuffer_resized
-}
-
-set_framebuffer_resized :: proc(resized: bool) {
-	window.framebuffer_resized = resized
 }
