@@ -27,7 +27,7 @@ init :: proc(name: string) {
 	compile_shaders(SHADERS_ROOT_DIR)
 	vulkan.init(name, MAX_FRAMES_IN_FLIGHT)
 	vulkan.init_graphics_pipeline(size_of(GlobalUboData))
-	core.event_register(.WINDOW_RESIZED, nil, handle_window_resize)
+	core.event_register(.PLATFORM_WINDOW_RESIZED, nil, handle_window_resize)
 }
 
 /**

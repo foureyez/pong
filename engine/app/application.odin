@@ -22,11 +22,11 @@ init :: proc(cfg: AppConfig) {
 	app.curr_time = time.now()
 	context.logger = app.logger
 
-	core.event_system_initialize()
-	core.input_system_initialize()
-	core.window_initialize(cfg.title, cfg.size.x, cfg.size.y, {})
+	core.event_system_init()
+	core.window_init(cfg.title, cfg.size.x, cfg.size.y, {})
+	core.event_register(.PLATFORM_WINDOW_CLOSED, nil, handle_app_close_event)
+	core.input_system_init()
 	renderer.init(cfg.title)
-	core.event_register(.WINDOW_CLOSED, nil, handle_app_close_event)
 	app.is_running = true
 }
 
@@ -34,7 +34,6 @@ start :: proc(update: proc(dt: f64), render: proc()) {
 	context.logger = app.logger
 	for app.is_running {
 		core.platform_process_events()
-		log.info(core.is_key_down(.Key_A))
 		new_time := time.now()
 		app.delta_time = time.duration_seconds(time.diff(app.curr_time, new_time))
 		app.curr_time = new_time

@@ -7,17 +7,17 @@ platform_process_events :: proc() {
 	for sdl.PollEvent(&e) {
 		#partial switch e.type {
 		case .QUIT:
-			event_publish(.WINDOW_CLOSED, {})
+			event_publish({.PLATFORM_WINDOW_CLOSED, nil})
 		case .KEYDOWN:
-			event_publish(.INPUT_KEYDOWN, {data = e.key.keysym.sym})
+			event_publish({.PLATFORM_KEYDOWN, e.key.keysym.sym})
 		case .KEYUP:
-			event_publish(.INPUT_KEYUP, {data = e.key.keysym.sym})
+			event_publish({.PLATFORM_KEYUP, e.key.keysym.sym})
 		case .WINDOWEVENT:
 			#partial switch e.window.event {
 			case .SIZE_CHANGED, .RESIZED:
-				event_publish(.WINDOW_RESIZED, {})
+				event_publish({.PLATFORM_WINDOW_RESIZED, nil})
 			case .CLOSE:
-				event_publish(.WINDOW_CLOSED, {})
+				event_publish({.PLATFORM_WINDOW_CLOSED, nil})
 			}
 		}
 	}

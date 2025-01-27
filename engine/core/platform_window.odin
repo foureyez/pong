@@ -19,7 +19,7 @@ Window :: struct {
 	framebuffer_resized: bool,
 }
 
-window_initialize :: proc(title: string, width: u32 = 0, height: u32 = 0, flags: sdl.WindowFlags = {}) {
+window_init :: proc(title: string, width: u32 = 0, height: u32 = 0, flags: sdl.WindowFlags = {}) {
 	window = new(Window)
 	sdl.Init({.VIDEO, .EVENTS})
 	ctitle := fmt.caprintf(title)

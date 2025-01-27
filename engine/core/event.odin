@@ -3,13 +3,16 @@ package core
 import "core:log"
 
 EventCode :: enum u16 {
-	WINDOW_CLOSED  = 0,
-	WINDOW_RESIZED = 1,
-	INPUT_KEYDOWN  = 2,
-	INPUT_KEYUP    = 3,
+	PLATFORM_WINDOW_CLOSED  = 0,
+	PLATFORM_WINDOW_RESIZED = 1,
+	PLATFORM_KEYDOWN        = 2,
+	PLATFORM_KEYUP          = 3,
+	INPUT_KEYDOWN           = 4,
+	INPUT_KEYUP             = 5,
 }
 
 Event :: struct {
+	code: EventCode,
 	data: any,
 }
 
@@ -28,7 +31,7 @@ EventSystemState :: struct {
 
 event_state: EventSystemState
 
-event_system_initialize :: proc() {
+event_system_init :: proc() {
 	event_state.registered_events = make([dynamic]RegisteredEvent, 0)
 }
 
@@ -54,12 +57,12 @@ event_register :: proc(code: EventCode, listener: rawptr, callback: Handle_Event
 	return true
 }
 
-event_publish :: proc(code: EventCode, event: Event) -> bool {
-	if event_state.registered_events[code] == nil {
+event_publish :: proc(event: Event) -> bool {
+	if event_state.registered_events[event.code] == nil {
 		return false
 	}
 
-	for re in event_state.registered_events[code] {
+	for re in event_state.registered_events[event.code] {
 		if re.callback(re.listener, event) {
 			log.debugf("event handled by %v, not processing other callbacks", re.listener)
 			return true
