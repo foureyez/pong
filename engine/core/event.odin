@@ -3,16 +3,17 @@ package core
 import "core:log"
 
 EventCode :: enum u16 {
-	KEY_PRESSED    = 0,
-	KEY_RELEASED   = 1,
-	WINDOW_RESIZED = 3,
+	WINDOW_CLOSED  = 0,
+	WINDOW_RESIZED = 1,
+	INPUT_KEYDOWN  = 2,
+	INPUT_KEYUP    = 3,
 }
 
 Event :: struct {
 	data: any,
 }
 
-Handle_Event :: proc(code: EventCode, listener: rawptr, event: Event) -> bool
+Handle_Event :: proc(listener: rawptr, event: Event) -> bool
 
 MAX_EVENT_CODE :: 10000
 
@@ -48,6 +49,7 @@ event_register :: proc(code: EventCode, listener: rawptr, callback: Handle_Event
 		}
 	}
 
+	log.debugf("Registered event callback for: %v", code)
 	append(&event_state.registered_events[code], RegisteredEvent{listener = listener, callback = callback})
 	return true
 }
@@ -58,8 +60,8 @@ event_publish :: proc(code: EventCode, event: Event) -> bool {
 	}
 
 	for re in event_state.registered_events[code] {
-		if re.callback(code, re.listener, event) {
-			log.debug("event handled by %v, not processing other callbacks", re.listener)
+		if re.callback(re.listener, event) {
+			log.debugf("event handled by %v, not processing other callbacks", re.listener)
 			return true
 		}
 	}

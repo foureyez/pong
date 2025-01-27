@@ -1,6 +1,48 @@
 package core
 
-KeyCode :: enum {
+import sdl "vendor:sdl2"
+
+InputState :: struct {
+	keyboard_state: KeyboardState,
+}
+KeyboardState :: struct {
+	keys: [256]bool,
+}
+state: InputState
+
+input_system_initialize :: proc() {
+	state = InputState {
+		keyboard_state = KeyboardState{},
+	}
+	event_register(.INPUT_KEYUP, nil, _handle_input_keyup)
+	event_register(.INPUT_KEYDOWN, nil, _handle_input_keydown)
+}
+
+is_key_down :: proc(keycode: KeyCode) -> bool {
+	return state.keyboard_state.keys[int(keycode)]
+}
+
+_handle_input_keyup :: proc(listener: rawptr, event: Event) -> bool {
+	state.keyboard_state.keys[get_keycode_from_sdl(event.data)] = false
+	return false
+}
+
+_handle_input_keydown :: proc(listener: rawptr, event: Event) -> bool {
+	state.keyboard_state.keys[get_keycode_from_sdl(event.data)] = true
+	return false
+}
+
+get_keycode_from_sdl :: proc(keycode: any) -> KeyCode {
+	sdl_keycode := keycode.(sdl.Keycode)
+	#partial switch sdl_keycode {
+	case .a:
+		return .Key_A
+	}
+	return .Key_Null
+}
+
+KeyCode :: enum u16 {
+	Key_Null         = 0,
 	Key_Space        = 32,
 	Key_Apostrophe   = 39, /* ' */
 	Key_Comma        = 44, /* , */

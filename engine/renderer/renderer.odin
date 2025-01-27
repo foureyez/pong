@@ -78,7 +78,7 @@ draw_mesh :: proc(mesh: Mesh, transform: core.Transform) {
 }
 
 
-handle_window_resize :: proc(code: core.EventCode, listener: rawptr, event: core.Event) -> bool {
+handle_window_resize :: proc(listener: rawptr, event: core.Event) -> bool {
 	vulkan.recreate_swap_chain()
 	// vulkan.create_viewport_resources()
 	return false
