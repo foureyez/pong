@@ -6,17 +6,24 @@ import "engine:core"
 import "engine:renderer"
 
 MAX_ENTITY_COUNT :: 10
-SPEED :: 0.5
+SPEED :: 1.0
 
 Paddle :: struct {
 	mesh:      renderer.Mesh,
 	transform: core.Transform,
 }
 
+Ball :: struct {
+	dir:       [2]f32,
+	transform: core.Transform,
+	mesh:      renderer.Mesh,
+}
+
 GameState :: struct {
 	camera:       renderer.Camera2D,
 	left_paddle:  Paddle,
 	right_paddle: Paddle,
+	ball:         Ball,
 }
 
 game_state: GameState
@@ -24,15 +31,16 @@ game_state: GameState
 init :: proc() {
 	game_state = GameState{}
 	game_state.camera = renderer.new_camera_2d(-10, 10, {0, 0, 0})
-	game_state.left_paddle = create_paddle(core.Transform{position = {0, -1, 0}, scale = {0.3, 0.3, 0.3}})
-	game_state.right_paddle = create_paddle(core.Transform{position = {0, 0, 0}, scale = {0.3, 0.3, 0.3}})
+	game_state.left_paddle = create_paddle(core.Transform{position = {-1.9, -1, 0}, scale = {0.3, 0.3, 1}})
+	game_state.right_paddle = create_paddle(core.Transform{position = {1, 0, 0}, scale = {0.3, 0.3, 1}})
+	game_state.ball = create_ball(core.Transform{position = {0, 0, 0}, scale = {0.1, 0.1, 1}})
 	// core.event_register(.INPUT_KEYUP, nil, handle_keyup)
 }
 
-handle_keyup :: proc(listener: rawptr, event: core.Event) -> bool {
-	log.info(event.data)
-	return false
-}
+// handle_keyup :: proc(listener: rawptr, event: core.Event) -> bool {
+// 	log.info(event.data)
+// 	return false
+// }
 
 update :: proc(dt: f64) {
 	if core.is_key_down(.Key_W) {
@@ -46,6 +54,7 @@ update :: proc(dt: f64) {
 	} else if core.is_key_down(.Key_K) {
 		game_state.right_paddle.transform.position.y += SPEED * f32(dt)
 	}
+	game_state.ball.transform.position.xy += game_state.ball.dir * f32(dt)
 }
 
 render :: proc() {
@@ -53,6 +62,7 @@ render :: proc() {
 	renderer.clear_background({0.6, 0.1, 0.2, 1})
 	renderer.draw_mesh(game_state.left_paddle.mesh, game_state.left_paddle.transform)
 	renderer.draw_mesh(game_state.right_paddle.mesh, game_state.right_paddle.transform)
+	renderer.draw_mesh(game_state.ball.mesh, game_state.ball.transform)
 	renderer.render_end()
 }
 
@@ -60,4 +70,12 @@ create_paddle :: proc(transform: core.Transform) -> (paddle: Paddle) {
 	paddle.transform = transform
 	paddle.mesh = renderer.mesh_create_quad()
 	return paddle
+}
+
+
+create_ball :: proc(transform: core.Transform) -> (ball: Ball) {
+	ball.transform = transform
+	ball.mesh = renderer.mesh_create_quad()
+	ball.dir = {1, 1}
+	return ball
 }
